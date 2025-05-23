@@ -5,6 +5,7 @@ const connectBtn = document.getElementById("connectBtn");
 const fundBtn = document.getElementById("fundBtn");
 const ethAmount = document.getElementById("ethAmount")
 const balanceBtn = document.getElementById("balanceBtn")
+const withdrawBtn = document.getElementById("withdrawBtn")
 
 
 let walletClient;
@@ -69,6 +70,34 @@ async function getBalance() {
   }
 }
 
+async function withdraw() {
+  if (typeof window.ethereum !== "undefined") {
+    walletClient = createWalletClient({
+      transport: custom(window.ethereum),
+    })
+    const [account] = await walletClient.requestAddresses()
+    const currentChain = await getCurrentChain(walletClient)
+
+    console.log("Processing transaction...")
+    publicClient = createPublicClient({
+      transport: custom(window.ethereum),
+    })
+    const { request } = await publicClient.simulateContract({
+      address: contractAddress,
+      abi,
+      functionName: "withdraw",
+      account,
+      chain: currentChain,
+    })
+    console.log(request);
+    
+    const hash = await walletClient.writeContract(request)
+    console.log("Transaction processed: ", hash)
+  } else {
+    withdrawBtn.innerHTML = "Please install MetaMask"
+  }
+}
+
 async function getCurrentChain(client) {
   const chainId = await client.getChainId()
   const currentChain = defineChain({
@@ -91,3 +120,4 @@ async function getCurrentChain(client) {
 connectBtn.onclick = connect;
 fundBtn.onclick = fund;
 balanceBtn.onclick = getBalance;
+withdrawBtn.onclick = withdraw;
