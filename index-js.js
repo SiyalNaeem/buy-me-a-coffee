@@ -6,7 +6,7 @@ const fundBtn = document.getElementById("fundBtn");
 const ethAmount = document.getElementById("ethAmount")
 const balanceBtn = document.getElementById("balanceBtn")
 const withdrawBtn = document.getElementById("withdrawBtn")
-
+const fundedAmountBtn = document.getElementById("fundedAmountBtn")
 
 let walletClient;
 let publicClient;
@@ -98,6 +98,32 @@ async function withdraw() {
   }
 }
 
+async function fundedAmount() {
+  if (typeof window.ethereum !== "undefined") {
+
+    walletClient = createWalletClient({
+      transport: custom(window.ethereum),
+    })
+    const [account] = await walletClient.requestAddresses()
+
+    publicClient = createPublicClient({
+      transport: custom(window.ethereum),
+    });
+
+    const currentChain = await getCurrentChain(publicClient);
+
+    const fundedAmount = await publicClient.readContract({
+      address: contractAddress,
+      abi,
+      functionName: "getAddressToAmountFunded",
+      args: [account],
+      chain: currentChain,
+    });
+    console.log("Funded Amount: ", formatEther(fundedAmount));
+
+  }
+}
+
 async function getCurrentChain(client) {
   const chainId = await client.getChainId()
   const currentChain = defineChain({
@@ -121,3 +147,4 @@ connectBtn.onclick = connect;
 fundBtn.onclick = fund;
 balanceBtn.onclick = getBalance;
 withdrawBtn.onclick = withdraw;
+fundedAmountBtn.onclick = fundedAmount;
